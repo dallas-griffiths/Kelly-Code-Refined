@@ -1,0 +1,52 @@
+---
+title: "Applied Probability Project"
+author: "Dallas Griffiths"
+date: "3/30/2020"
+output: 
+  html_document:
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Kelly Criterion Simulation
+trials = 1000 # Repeat the simulation this many times
+bets = 300 # Bets per simulation
+winprob = 0.60 # Win probability per bet
+return = c(0.2,-0.2) # Profit if win, loss if lose
+edge = c(0.2,0.1,0.05) # Competing allocations to test
+
+percent <- function(x, digits = 2, format = "f") {
+  paste(formatC(100 * x, format = format, digits = digits), "%")
+}
+```
+
+```{r}
+set.seed(04012020)
+bankroll = array(data=0,dim=c(trials,length(edge),bets))
+bankroll[,,1] = 25 #BR=1 for bet 1
+```
+
+```{r}
+#Simulation loop
+for(trial in 1:trials) {
+  outcome = rbinom(n=bets, size=1, prob=winprob)
+  ret = ifelse(outcome,return[1],return[2])
+  for(i in 2:length(ret)) {
+    for(j in 1:length(edge)) {
+      bet = edge[j]
+      bankroll[trial,j,i] = bankroll[trial,j,i-1] * (1 + bet * ret[i])
+    }
+  }
+}
+```
+
+```{r}
+#Results
+d = data.frame(bankroll[,,bets]) #Results after last bets only
+colnames(d) = paste("Betting ",percent(edge,digits=0))
+summary(d)
+```
